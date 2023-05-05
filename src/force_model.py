@@ -133,10 +133,6 @@ class ForceModel():
         # get perturbation torques
         perturbations = self.perturbations.get_torques(t, rotation_matrix)
 
-
-
-        rotated_perturbations = np.dot(perturbations, rotation_matrix)
-
         return perturbations
     
 
