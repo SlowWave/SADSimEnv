@@ -109,7 +109,8 @@ class SpacecraftEnv(Env):
             is_last_step, ode_solution = self.propagator.propagate(
                 states,
                 action,
-                self.spacecraft.inertia.matrix
+                self.spacecraft.inertia.matrix,
+                self.spacecraft.attitude.current_quaternion
             )
 
             # update spacecraft states
@@ -133,10 +134,10 @@ if __name__ == "__main__":
     env = SpacecraftEnv()
     env.reset()
 
-    action = np.array([0.1, 0, 0])
+    action = np.array([0, 0, 0])
 
     for i in range(100):
         env.step(action)
 
-    env.plot_results()
+    # env.plot_results()
     env.render_animation()

@@ -20,11 +20,10 @@ class Propagator():
         
         self.current_time = 0
 
-    def propagate(self, states, action, inertia_matrix):
+    def propagate(self, states, action, inertia_matrix, quaternion):
 
         # get torque perturbations
-        perturbations = self.force_model.get_perturbations(self.current_time)
-        # todo: rotate the perturbation vector
+        perturbations = self.force_model.get_perturbations(self.current_time, quaternion)
 
         # integrate ode
         ode_solution = self._integrate_ode(states, action, perturbations, inertia_matrix)
