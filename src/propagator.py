@@ -20,16 +20,13 @@ class Propagator():
         
         self.current_time = 0
 
-    def propagate(self, states, action, inertia_matrix, quaternion):
-
-        # get torque perturbations
-        perturbations = self.force_model.get_perturbations(self.current_time, quaternion)
+    def propagate(self, states, action, inertia_matrix):
 
         # integrate ode
-        ode_solution = self._integrate_ode(states, action, perturbations, inertia_matrix)
+        ode_solution = self._integrate_ode(states, action, inertia_matrix)
 
         # update current time
-        self.current_time += ode_solution.t[-1]
+        self.current_time = ode_solution.t[-1]
 
         # check termination condition
         if self.current_time >= self.time_horizon:
@@ -39,19 +36,18 @@ class Propagator():
 
         return is_last_step, ode_solution
 
-    def _integrate_ode(self, states, action, perturbations, inertia_matrix):
+    def _integrate_ode(self, states, action, inertia_matrix):
 
         ode_solution = solve_ivp(
-            fun=self.force_model.attitude_ode,
-            t_span=[0, self.integration_step],
+            fun=self.force_model.ode,
+            t_span=[self.current_time,self.current_time + self.integration_step],
             y0=states,
             method=self.integration_method,
             dense_output=False,
-            args=(action, perturbations, inertia_matrix,)
+            args=(action, inertia_matrix)
         )
 
         return ode_solution
-
 
 if __name__ == "__main__":
 

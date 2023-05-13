@@ -19,61 +19,105 @@ class PerturbationsModel():
         self.sinusoidal_perturbations_periods = CFG['force_model']['perturbations']['sinusoidal_perturbations_periods']
         self.sinusoidal_perturbations_frames = CFG['force_model']['perturbations']['sinusoidal_perturbations_frames']
 
-    def get_torques(self, t, rotation_matrix):
+        self.torques = self._get_torques()
 
-        perturbation = np.array([0.0, 0.0, 0.0])
+    def _get_torques(self):
+
+        torques = {
+            'constant_perturbations_amplitudes': list(),
+            'constant_perturbations_times': list(),
+            'constant_perturbation_frames': list(),
+            'sinusoidal_perturbations_amplitudes': list(),
+            'sinusoidal_perturbations_frames': list()
+        }
 
         # add constant perturbations
         for idx in range(self.n_constant_perturbations):
 
-            perturbation += self._get_constant_perturbation(t, idx, rotation_matrix)
+            torques['constant_perturbations_amplitudes'].append(
+                self.constant_perturbations_amplitudes[idx]
+            )
+
+            torques['constant_perturbations_times'].append(
+                self.constant_perturbations_times[idx]
+            )
+
+            torques['constant_perturbation_frames'].append(
+                self.constant_perturbation_frames[idx]
+            )
 
         # add sinusoidal perturbations
-        for idx in range(self.n_sinusoidal_perturbations):
+        for i in range(self.n_sinusoidal_perturbations):
 
-            perturbation += self._get_sinusoidal_perturbation(t, idx, rotation_matrix)
+            perturbation_lambdas = list()
 
-        return perturbation
+            for j in range(3):
+                if self.sinusoidal_perturbations_periods[i][j] > 0:
+                    perturbation_lambdas.append(
+                        lambda t, ii=i, jj=j: self.sinusoidal_perturbations_amplitudes[ii][jj] * np.cos(2 * np.pi * 1 / self.sinusoidal_perturbations_periods[ii][jj] * t)
+                    )
+                else:
+                    perturbation_lambdas.append(
+                        lambda t: 0
+                    )
 
-    def _get_constant_perturbation(self, t, idx, rotation_matrix):
+            torques['sinusoidal_perturbations_amplitudes'].append(perturbation_lambdas)
 
-        if self.constant_perturbations_times[idx] == 0:    
-            perturbation = np.array(self.constant_perturbations_amplitudes[idx])
+            torques['sinusoidal_perturbations_frames'].append(
+                self.sinusoidal_perturbations_frames[i]
+            )
 
-        elif self.constant_perturbations_times[idx] == t:
-            perturbation = np.array(self.constant_perturbations_amplitudes[idx])
+        return torques
 
-        if self.constant_perturbation_frames[idx] == "rotating":
-            return perturbation
+    def ode(self, t, x):
 
-        elif self.constant_perturbation_frames[idx] == "fixed":
-            perturbation = np.dot(perturbation, rotation_matrix)
-            return perturbation
-        else:
-            return np.array([0.0, 0.0, 0.0])
+        torques = np.array([0.0, 0.0, 0.0])
 
-    def _get_sinusoidal_perturbation(self, t, idx, rotation_matrix):
+        # build rotation matrix
+        rotation_matrix = np.array(
+            [
+                [1 - 2 * x[2]**2 - 2 * x[3]**2, 2 * x[1] * x[2] - 2 * x[0] * x[3], 2 * x[1] * x[3] + 2 * x[0] * x[2]],
+                [2 * x[1] * x[2] + 2 * x[0] * x[3], 1 - 2 * x[1]**2 - 2 * x[3]**2, 2 * x[2] * x[3] - 2 * x[0] * x[1]],
+                [2 * x[1] * x[3] - 2 * x[0] * x[2], 2 * x[2] * x[3] + 2 * x[0] * x[1], 1 - 2 * x[1]**2 - 2 * x[2]**2]
+            ],
+            dtype=np.float32
+        )
 
-        perturbation_list = list()
+        # compute constant disturbances
+        for idx, time_range in enumerate(self.torques['constant_perturbations_times']):
 
-        for i in range(3):
-            if self.sinusoidal_perturbations_periods[idx][i] > 0:
-                perturbation_list.append(
-                    self.sinusoidal_perturbations_amplitudes[idx][i] * np.cos(2 * np.pi * 1 / self.sinusoidal_perturbations_periods[idx][i] * t)
+            if time_range[0] <= t and time_range[1] >= t:
+
+                if self.torques['constant_perturbation_frames'][idx] == 'rotating':
+                    torques += np.array(self.torques['constant_perturbations_amplitudes'][idx])
+
+                elif self.torques['constant_perturbation_frames'][idx] == 'fixed':
+                    torque = np.array(self.torques['constant_perturbations_amplitudes'][idx])
+                    torques += np.dot(torque, rotation_matrix)
+
+        # compute sinusoidal disturbances
+        for idx, lambda_torque in enumerate(self.torques['sinusoidal_perturbations_amplitudes']):
+
+            if self.torques['sinusoidal_perturbations_frames'][idx] == 'rotating':
+                torques += np.array(
+                    [
+                        lambda_torque[0](t),
+                        lambda_torque[1](t),
+                        lambda_torque[2](t)
+                    ]
                 )
-            else:
-                perturbation_list.append(0)
 
-        perturbation = np.array(perturbation_list)
+            elif self.torques['sinusoidal_perturbations_frames'][idx] == 'fixed':
+                torque = np.array(
+                    [
+                        lambda_torque[0](t),
+                        lambda_torque[1](t),
+                        lambda_torque[2](t)
+                    ]
+                )
+                torques += np.dot(torque, rotation_matrix)
 
-        if self.sinusoidal_perturbations_frames[idx] == "rotating":
-            return perturbation
-
-        elif self.sinusoidal_perturbations_frames[idx] == "fixed":
-            perturbation = np.dot(perturbation, rotation_matrix)
-            return perturbation
-        else:
-            return np.array([0.0, 0.0, 0.0])
+        return torques
 
 
 class AttitudeDynamicsModel():
@@ -85,7 +129,7 @@ class AttitudeDynamicsModel():
 
         self.ode = ode_map[CFG['force_model']['attitude_dynamics']['ode']]
 
-    def quaternion_ode(self, t, x, u, d, inertia_matrix):
+    def quaternion_ode(self, x, u, d, inertia_matrix):
 
         # get spacecraft angular velocity components
         sc_w = np.array([x[4], x[5], x[6]])
@@ -116,25 +160,25 @@ class ForceModel():
         self.attitude_dynamics = AttitudeDynamicsModel()
         self.perturbations = PerturbationsModel()
         self.attitude_ode = self.attitude_dynamics.ode
+        self.perturbations_ode = self.perturbations.ode
+        self.use_perturbations = CFG['force_model']['use_perturbations']
 
-    def get_perturbations(self, t, quaternion):
+    def ode(self, t, x, u, inertia_matrix):
 
-        # build rotation matrix
-        q0, q1, q2, q3 = quaternion
-        rotation_matrix = np.array(
-            [
-                [1 - 2 * q2**2 - 2 * q3**2, 2 * q1 * q2 - 2 * q0 * q3, 2 * q1 * q3 + 2 * q0 * q2],
-                [2 * q1 * q2 + 2 * q0 * q3, 1 - 2 * q1**2 - 2 * q3**2, 2 * q2 * q3 - 2 * q0 * q1],
-                [2 * q1 * q3 - 2 * q0 * q2, 2 * q2 * q3 + 2 * q0 * q1, 1 - 2 * q1**2 - 2 * q2**2]
-            ],
-            dtype=np.float32
-        )
+        if self.use_perturbations:
 
-        # get perturbation torques
-        perturbations = self.perturbations.get_torques(t, rotation_matrix)
+            # compute torque disturbances
+            disturbances = self.perturbations_ode(t, x)
 
-        return perturbations
-    
+        else:
+            disturbances = np.array([0, 0, 0])
+
+        # compute spacecraft attitude
+        x_dot = self.attitude_ode(x, u, disturbances, inertia_matrix)
+
+        return x_dot
+
+
 
 if __name__ == "__main__":
 
