@@ -18,14 +18,11 @@ class RewardModel():
 
         self.model = CFG['environment']['reward_model']['model']
 
-    def get_reward(self, action, storage):
+    def get_reward(self, storage):
 
-        return self.reward_model_map[self.model](
-            action,
-            storage
-        )
+        return self.reward_model_map[self.model](storage)
 
-    def _model_1(self, action, storage):
+    def _model_1(self, storage):
 
         # get spacecraft angular velocity norm
         sc_w_norm = np.sqrt(np.sum(storage.angular_velocities[-1]**2))

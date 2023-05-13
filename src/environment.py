@@ -62,7 +62,7 @@ class SpacecraftEnv(Env):
         observation = self._get_observation()
 
         # compute agent reward
-        is_last_reward, reward = self.reward_model.get_reward(action, self.storage)
+        is_last_reward, reward = self.reward_model.get_reward(self.storage)
 
         # check termination condition
         if is_last_reward or is_last_step:
@@ -139,5 +139,5 @@ if __name__ == "__main__":
     for i in range(100):
         env.step(action)
 
-    # env.plot_results()
+    env.plot_results()
     env.render_animation()
