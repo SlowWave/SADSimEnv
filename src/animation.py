@@ -167,7 +167,9 @@ class Animation():
             buffer = glReadPixels(0, 0, self.width, self.height, GL_RGB, GL_UNSIGNED_BYTE)
             image = np.frombuffer(buffer, dtype=np.uint8).reshape(self.height, self.width, 3)
             image = np.flipud(image)
-            frames.append(image)
+
+            if self.save_fig:
+                frames.append(image)
 
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
