@@ -180,10 +180,6 @@ class Spacecraft():
         
         self.attitude.init_states()
 
-    def get_env_states(self):
-
-        return self.attitude.get_states()
-
     def get_prop_states(self):
 
         return self.attitude.get_states()

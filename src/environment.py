@@ -93,7 +93,7 @@ class SpacecraftEnv(Env):
 
     def _get_observation(self):
 
-        return self.spacecraft.get_env_states()
+        return self.storage.get_env_states()
 
     def _environment_step(self, action):
 

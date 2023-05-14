@@ -44,6 +44,18 @@ class Storage():
         self.angular_velocities.append(angular_velocity)
         self.actions.append(action)
 
+    def get_env_states(self):
+
+        # get current quaternion
+        quaternion = self.quaternions[-1]
+
+        # get current angular velocity
+        angular_velocity = self.angular_velocities[-1]
+
+        states = np.concatenate((quaternion, angular_velocity), axis=None)
+
+        return states
+
     def render_animation(self, target_quaternion, time_step):
 
         self.animation_utils.animate(self.quaternion_errors, target_quaternion, time_step)
