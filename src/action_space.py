@@ -21,7 +21,7 @@ class ActionSpaceModel():
 
     def get_action_space(self):
 
-        return self.action_model_map[self.model]
+        return self.action_model_map[self.model]()
     
     def _model_1(self):
 
@@ -47,3 +47,11 @@ class ActionSpaceModel():
     def _model_2(self):
         pass
 
+
+
+if __name__ == "__main__":
+
+    act_model = ActionSpaceModel()
+    act_space = act_model.get_action_space()
+    sample = act_space.sample()
+    print(sample)

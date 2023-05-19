@@ -21,7 +21,7 @@ class ObservationSpaceModel():
 
     def get_observation_space(self):
 
-        return self.observation_model_map[self.model]
+        return self.observation_model_map[self.model]()
     
     def _model_1(self):
 

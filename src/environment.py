@@ -135,10 +135,10 @@ if __name__ == "__main__":
     env = SpacecraftEnv()
     env.reset()
 
-    action = np.array([0, 0, 0])
 
     t1 = time.time()
     for i in range(1000):
+        action = env.action_space.sample()
         env.step(action)
     t2 = time.time()
 
