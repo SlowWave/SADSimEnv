@@ -1,0 +1,93 @@
+
+# gym environment configs
+[environment]
+n_skipped_frames = 0
+use_random_seed = true
+random_seed = 0
+normalize_obs = true
+normalize_reward = true
+
+# observation space configs
+[environment.observation_space]
+model = "model_1"
+
+# action space configs
+[environment.action_space]
+model = "model_5"
+
+# reward model configs
+[environment.reward_model]
+model = "model_6"
+
+# spacecraft object configs
+[spacecraft]
+
+# spacecraft inertia configs
+[spacecraft.inertia]
+moi = [1, 1, 1]
+poi = [0, 0, 0]
+use_random_moi = false
+use_random_poi = false
+random_moi_max = [10, 10, 10]
+random_moi_min = [0.5, 0.5, 0.5]
+random_poi_max = [1, 1, 1]
+random_poi_min = [0, 0, 0]
+
+# spacecraft attitude configs
+[spacecraft.attitude]
+representation = "quaternions"
+initial_angular_error_max = 360
+initial_angular_error_min = 0
+target_quaternion = [1, 0, 0, 0]
+initial_angular_velocity = [0, 0, 0]
+
+# force model configs
+[force_model]
+use_perturbations = false
+
+# attitude dynamics configs
+[force_model.attitude_dynamics]
+ode = "quaternion"
+
+# dynamics perturbations configs
+[force_model.perturbations]
+n_constant_perturbations = 0
+constant_perturbations_amplitudes = [
+    [10, 10, 10],
+    [0, 0, 0],
+    [0, 0, 0]
+]
+constant_perturbations_times = [
+    [2, 2.25],
+    [0, 0],
+    [0, 0]
+]
+constant_perturbation_frames = [
+    "fixed",
+    "fixed",
+    "fixed"
+]
+n_sinusoidal_perturbations = 1
+sinusoidal_perturbations_amplitudes = [
+    [1, 0, 0],
+    [0.5, 1, 0.5],
+    [0, 0, 0]
+]
+sinusoidal_perturbations_periods = [
+    [0.01, 1, 10],
+    [5, 10, 0],
+    [0, 0, 0]
+]
+sinusoidal_perturbations_frames = [
+    "fixed",
+    "rotating",
+    "rotating"
+]
+
+# propagator object configs
+[propagator]
+integration_step = 0.01
+time_horizon = 100
+integration_method = "LSODA"
+
+
